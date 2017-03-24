@@ -1,0 +1,31 @@
+routes:
+  default:
+    loss_mult: 10
+    lag_mult: 1
+    IPs:
+      # google-public-dns-a.google.com
+      8.8.8.8:
+        weight: 1
+        count: 10
+      # google-public-dns-b.google.com
+      8.8.4.4:
+        weight: 2
+        count: 20
+      # wp.pl
+      212.77.98.9:
+        weigth: 2
+        count: 10
+      # onet.pl
+      213.180.141.140:
+        weigth: 2
+        count: 10
+  10.0.0.0/8:
+    loss_mult: 10
+    lag_mult: 1
+    IPs:
+      10.1.0.1:
+        weight: 1
+        count: 15
+      10.2.0.1:
+        weight: 2
+        count: 20

@@ -13,12 +13,26 @@ in the configuration file. Logs are send to syslog.
 
 Requirements
 ---------
+- GNU/Linux
+- Pytnon 2.7
+- modules listed in requirements.txt
 
 Configuration
 ---------
 
+Defaults
+---------
+
 Usage
 ---------
+- clone this repository
+- pip install -r requirements.txt
+- adjust config file (see example.yaml)
+- running with --dry-run True
+
+Contribution
+---------
+Help is always welcome, so clone this repository, send pull requests.
 
 License
 ---------
