@@ -13,11 +13,11 @@ routes:
         count: 20
       # wp.pl
       212.77.98.9:
-        weigth: 2
+        weight: 2
         count: 10
       # onet.pl
       213.180.141.140:
-        weigth: 2
+        weight: 2
         count: 10
   10.0.0.0/8:
     loss_mult: 10
