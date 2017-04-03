@@ -26,18 +26,34 @@ def get_ip_score(ip, loss_mult, lag_mult, count):
     return score
 
 
-def get_route_score(route):
-    logger.debug("Getting score for route {}".format(route))
+def set_routing_ip(ip, interface, gateway):
+    logger.debug("Setting routing for ip {} through gateway {} on interface {}"
+                 .format(ip, gateway, interface))
+    return
+
+
+def del_routing_ip(ip, interface, gateway):
+    logger.debug("Deleting routing for ip {} through gateway {} on interface {}"
+                 .format(ip, gateway, interface))
+    return
+
+
+def get_route_score(route, interface, data):
+    logger.debug("Getting score for route {} interface {}".
+                 format(route, interface))
     route_sum = 0
     weight_sum = 0
-    loss_mult = route.get('loss_mult', 10)
-    lag_mult = route.get('lag_mult', 1)
-    for ip in route.get('IPs'):
-        count = route['IPs'][ip].get('count', 10)
-        ip_weight = route['IPs'][ip].get('weight', 1)
+    lag_mult = data['routes'][route].get('lag_mult', 1)
+    loss_mult = data['routes'][route].get('loss_mult', 10)
+    gateway = data['interfaces'][interface].get('gateway')
+    for ip in data['routes'][route].get('IPs'):
+        set_routing_ip(ip, interface, gateway)
+        count = data['routes'][route]['IPs'][ip].get('count', 10)
+        ip_weight = data['routes'][route]['IPs'][ip].get('weight', 1)
         ip_score = get_ip_score(ip, loss_mult, lag_mult, count)
         route_sum += ip_score*ip_weight
         weight_sum += ip_weight
+        del_routing_ip(ip, interface, gateway)
     route_score = float(route_sum/weight_sum)
     logger.debug("Route sum is {}, route score is {}"
                  .format(route_sum, route_score))
@@ -52,9 +68,13 @@ def main():
     except:
         logger.error("Couldn't read config file {}".format(config))
 
-    for route in data.get('routes'):
-        logger.info("Route {} got score {}".
-                    format(route, get_route_score(data['routes'][route])))
+    for interface in data.get('interfaces'):
+        logger.debug("Testing interface {}".format(interface))
+        for route in data['interfaces'][interface].get('routes'):
+            logger.debug("Testing route {} on interface {}".format(route,
+                         interface))
+            score = get_route_score(route, interface, data)
+            logger.info("Route {} got score {}".format(route, score))
 
 
 def parse_arguments():
