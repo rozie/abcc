@@ -63,6 +63,7 @@ def get_route_score(route, interface, data):
                 logger.warning("Failed to remove routing for IP {} via {}\
  on interface {}".format(ip, gateway, interface))
         else:
+            route_sum += 1000
             logger.warning("Failed to set routing for IP {} via {}\
  on interface {}".format(ip, gateway, interface))
         logger.debug("Route sum is now {}".format(route_sum))
