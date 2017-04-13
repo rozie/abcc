@@ -8,7 +8,7 @@ import yaml
 from subprocess import call
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -28,7 +28,7 @@ def get_ip_score(ip, loss_mult, lag_mult, count):
 
 
 def set_routing_ip(ip, interface, gateway):
-    logger.debug("Setting routing for ip {} through gateway {} on interface {}"
+    logger.debug("Setting routing for ip {} via gateway {} on interface {}"
                  .format(ip, gateway, interface))
     result = call(["./plugins/generic_route_set.sh", ip, gateway])
     logger.debug("Exit code is {}".format(result))
@@ -36,7 +36,7 @@ def set_routing_ip(ip, interface, gateway):
 
 
 def del_routing_ip(ip, interface, gateway):
-    logger.debug("Deleting routing for ip {} through gateway {} on interface {}"
+    logger.debug("Deleting routing for ip {} via gateway {} on interface {}"
                  .format(ip, gateway, interface))
     result = call(["./plugins/generic_route_del.sh", ip, gateway])
     logger.debug("Exit code is {}".format(result))
@@ -77,20 +77,34 @@ def get_route_score(route, interface, data):
 
 def main():
     args = parse_arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
+
+    # load config file
     try:
         with open(args.config, "r") as config:
             data = yaml.load(config)
     except:
         logger.error("Couldn't read config file {}".format(config))
 
+    scores = {}
+    # get score for all routes on all interfaces
     for interface in data.get('interfaces'):
         logger.debug("Testing interface {}".format(interface))
+        scores[interface] = {}
         for route in data['interfaces'][interface].get('routes'):
             logger.debug("Testing route {} on interface {}".format(route,
                          interface))
             score = get_route_score(route, interface, data)
             logger.info("Route {} got score {} on interface {}"
                         .format(route, score, interface))
+            scores[interface][route] = score
+
+    # get_current_interface_for_route()
+
+    # choose_best_interface_for_route()
+
+    # set_routing_for_route()
 
 
 def parse_arguments():
