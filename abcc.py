@@ -8,7 +8,6 @@ import yaml
 from subprocess import call
 
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
@@ -75,10 +74,29 @@ def get_route_score(route, interface, data):
     return route_score
 
 
+def get_best_interfaces_for_routes(data, scores):
+    logger.debug("Checking best interfaces")
+    best = {}
+    for interface in data.get('interfaces'):
+        best[interface] = {}
+        for route in data['interfaces'][interface].get('routes'):
+            score = scores[interface][route]
+            if not best.get(interface) or score < best.get(interface):
+                best[interface] = score
+                logger.debug("New best interface {} for route {} found. The \
+score is {}"
+                             .format(interface, route, score))
+    return best
+
+
 def main():
     args = parse_arguments()
+
+    # set verbosity
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig(level=logging.INFO)
 
     # load config file
     try:
@@ -103,6 +121,9 @@ def main():
     # get_current_interface_for_route()
 
     # choose_best_interface_for_route()
+    best = get_best_interfaces_for_routes(data, scores)
+
+    # compare current with best
 
     # set_routing_for_route()
 
@@ -117,7 +138,7 @@ def parse_arguments():
         help="Just print data, don't change anything")
     parser.add_argument(
         '--verbose', required=False,
-        default=True,
+        default=False,
         help="Provide verbose output")
     parser.add_argument(
         '--config', required=False,
