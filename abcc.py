@@ -77,12 +77,13 @@ def get_route_score(route, interface, data):
 def get_best_interfaces_for_routes(data, scores):
     logger.debug("Checking best interfaces")
     best = {}
+    best_score = {}
     for interface in data.get('interfaces'):
-        best[interface] = {}
         for route in data['interfaces'][interface].get('routes'):
             score = scores[interface][route]
-            if not best.get(interface) or score < best.get(interface):
-                best[interface] = score
+            if not best.get(route) or score < best_score.get(route):
+                best[route] = interface
+                best_score[route] = score
                 logger.debug("New best interface {} for route {} found. The \
 score is {}"
                              .format(interface, route, score))
@@ -122,6 +123,7 @@ def main():
 
     # choose_best_interface_for_route()
     best = get_best_interfaces_for_routes(data, scores)
+    print best
 
     # compare current with best
 
