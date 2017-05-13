@@ -5,7 +5,8 @@ import argparse
 import logging
 import ping
 import yaml
-from subprocess import call
+import re
+from subprocess import call, check_output
 
 
 logger = logging.getLogger(__name__)
@@ -90,6 +91,28 @@ score is {}"
     return best
 
 
+def get_current_routing_table():
+    result = check_output(["ip", "route"])
+    logger.debug("Current routing table: {}".format(result))
+    return result
+
+
+def get_current_interfaces_for_routes(data):
+    # read_routing_table
+    routing = {}
+    table = get_current_routing_table().splitlines()
+    for line in table:
+        # logger.debug("Line {}".format(line))
+        match = re.match(r"(\S+)\s+via\s+(\S+)", line)
+        if match:
+            route = match.group(1)
+            iface = match.group(2)
+            routing[route] = iface
+            logger.debug("Found route {} via iface {}".format(route, iface))
+    logger.debug("Routing is {}".format(routing))
+    return routing
+
+
 def main():
     args = parse_arguments()
 
@@ -119,7 +142,9 @@ def main():
                         .format(route, score, interface))
             scores[interface][route] = score
 
-    # get_current_interface_for_route()
+    # get_current_interfaces_for_routes()
+    routing = get_current_interfaces_for_routes(data)
+    print routing
 
     # choose_best_interface_for_route()
     best = get_best_interfaces_for_routes(data, scores)
