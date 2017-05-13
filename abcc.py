@@ -3,11 +3,11 @@
 
 import argparse
 import logging
-import ping
-import yaml
 import re
 from subprocess import call, check_output
 
+import ping
+import yaml
 
 logger = logging.getLogger(__name__)
 
@@ -103,14 +103,46 @@ def get_current_interfaces_for_routes(data):
     table = get_current_routing_table().splitlines()
     for line in table:
         # logger.debug("Line {}".format(line))
-        match = re.match(r"(\S+)\s+via\s+(\S+)", line)
+        match = re.match(r"(\S+)\s+via\s+(\S+)\s+dev\s+(\S+)", line)
         if match:
             route = match.group(1)
-            iface = match.group(2)
+            iface = match.group(3)
             routing[route] = iface
             logger.debug("Found route {} via iface {}".format(route, iface))
     logger.debug("Routing is {}".format(routing))
     return routing
+
+
+def compare_scores(scores, routing, best, data):
+    for route in data.get('routes'):
+        logger.debug("Checking route {}".format(route))
+        best_iface = best.get(route)
+        curr_iface = routing.get(route)
+        if best_iface != curr_iface:
+            logger.debug("Best iface {} is not current {}".format(best_iface,
+                         curr_iface))
+            switch_cost = data.get(route).get("switch_cost", 100)
+            logger.debug("Switch cost for route {} is {}".format(route,
+                         switch_cost))
+            curr_score = scores.get(curr_iface).get(route)
+            best_score = scores.get(best_iface).get(route)
+            logger.debug("Current score {}, best score {}".format(curr_score,
+                         best_score))
+            if curr_score and best_score:
+                if best_score + switch_cost < curr_score:
+                    logger.debug("Switching routing for {} to iface {}".format(
+                                route, best_iface))
+                else:
+                    logger.debug("Iface {} score {} better than iface {} score\
+for route {} but switching cost is too high".format(best_iface, best_score,
+                                                    curr_iface, curr_score,
+                                                    route))
+            else:
+                logger.warning("Cannot compare scores - current or best scores\
+is not available")
+        else:
+            logger.debug("Best iface {} is the same as {}".format(best_iface,
+                         curr_iface))
 
 
 def main():
@@ -151,6 +183,7 @@ def main():
     print best
 
     # compare current with best
+    compare_scores(scores, routing, best, data)
 
     # set_routing_for_route()
 
