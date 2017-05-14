@@ -133,10 +133,10 @@ def compare_scores(scores, routing, best, data):
                          best_score))
             if curr_score and best_score:
                 if best_score + switch_cost < curr_score:
-                    logger.debug("Switching routing for {} to iface {}".format(
+                    logger.info("Switching routing for {} to iface {}".format(
                                 route, best_iface))
                 else:
-                    logger.debug("Iface {} score {} better than iface {} score\
+                    logger.info("Iface {} score {} better than iface {} score\
 for route {} but switching cost is too high".format(best_iface, best_score,
                                                     curr_iface, curr_score,
                                                     route))
