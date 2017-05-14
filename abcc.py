@@ -60,11 +60,11 @@ def get_route_score(route, interface, data):
             route_sum += ip_score*ip_weight
             weight_sum += ip_weight
             if del_routing_ip(ip, interface, gateway):
-                logger.warning("Failed to remove routing for IP {} via {}\
+                logger.error("Failed to remove routing for IP {} via {}\
  on interface {}".format(ip, gateway, interface))
         else:
             route_sum += 1000
-            logger.warning("Failed to set routing for IP {} via {}\
+            logger.error("Failed to set routing for IP {} via {}\
  on interface {}".format(ip, gateway, interface))
         logger.debug("Route sum is now {}".format(route_sum))
     if weight_sum == 0:
@@ -109,6 +109,9 @@ def get_current_interfaces_for_routes(data):
             iface = match.group(3)
             routing[route] = iface
             logger.debug("Found route {} via iface {}".format(route, iface))
+            if route in routing and routing.get(route) != iface:
+                logger.error("Route {} found on iface {}, but already known".
+                             format(route, iface))
     logger.debug("Routing is {}".format(routing))
     return routing
 
