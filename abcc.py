@@ -128,11 +128,11 @@ def compare_scores(scores, routing, best, data):
                          best_score)
             if curr_score and best_score:
                 if best_score + switch_cost < curr_score:
-                    logger.info("Switching routing for %s to iface %s", route,
-                                best_iface)
+                    logger.info("Switching routing for %s from intreface %s to\
+ %s", route, curr_face, best_iface)
                 else:
-                    logger.info("Iface %s score %s better than iface %s score\
-for route %s but switching cost is too high", best_iface, best_score,
+                    logger.info("Iface %s score %s is better than iface %s\
+ score for route %s but switching cost is too high", best_iface, best_score,
                                 curr_iface, curr_score, route)
             else:
                 logger.warning("Cannot compare scores - current or best scores\
@@ -172,11 +172,11 @@ def main():
 
     # get_current_interfaces_for_routes()
     routing = get_current_interfaces_for_routes(data)
-    print routing
+    logger.debug("Current routing: %s",  routing)
 
     # choose_best_interface_for_route()
     best = get_best_interfaces_for_routes(data, scores)
-    print best
+    logger.debug("Best routing: %s", best)
 
     # compare current with best
     compare_scores(scores, routing, best, data)
