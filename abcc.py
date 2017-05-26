@@ -13,39 +13,38 @@ logger = logging.getLogger(__name__)
 
 
 def get_ip_score(ip, loss_mult, lag_mult, count):
-    logger.debug("IP {} loss_mult {} lag_mult {} count {}"
-                 .format(ip, loss_mult, lag_mult, count))
+    logger.debug("IP %s loss_mult %s lag_mult %s count %s", ip, loss_mult,
+                 lag_mult, count)
 
     result = ping.quiet_ping(ip, 2, count)
     (loss, lag) = (result[0], result[2])
-    logger.debug("loss {} lag {}".format(loss, lag))
+    logger.debug("loss %s lag %s", loss, lag)
     if not lag:
         lag = 1000
-        logger.warning("IP {} is unreachable".format(ip))
-    score = loss_mult*loss + lag_mult*lag
-    logger.debug("Returning score {} for IP {}".format(score, ip))
+        logger.warning("IP %s is unreachable", ip)
+    score = loss_mult * loss + lag_mult * lag
+    logger.debug("Returning score %s for IP %s", score, ip)
     return score
 
 
 def set_routing_ip(ip, interface, gateway):
-    logger.debug("Setting routing for ip {} via gateway {} on interface {}"
-                 .format(ip, gateway, interface))
+    logger.debug("Setting routing for ip %s via gateway %s on interface %s",
+                 ip, gateway, interface)
     result = call(["./plugins/generic_route_set.sh", ip, gateway])
-    logger.debug("Exit code is {}".format(result))
+    logger.debug("Exit code is %s", result)
     return result
 
 
 def del_routing_ip(ip, interface, gateway):
-    logger.debug("Deleting routing for ip {} via gateway {} on interface {}"
-                 .format(ip, gateway, interface))
+    logger.debug("Deleting routing for ip %s via gateway %s on interface %s",
+                 ip, gateway, interface)
     result = call(["./plugins/generic_route_del.sh", ip, gateway])
-    logger.debug("Exit code is {}".format(result))
+    logger.debug("Exit code is %s", result)
     return result
 
 
 def get_route_score(route, interface, data):
-    logger.debug("Getting score for route {} interface {}".
-                 format(route, interface))
+    logger.debug("Getting score for route %s interface %s", route, interface)
     route_sum = 0
     weight_sum = 0
     lag_mult = data['routes'][route].get('lag_mult', 1)
@@ -55,23 +54,22 @@ def get_route_score(route, interface, data):
         if not set_routing_ip(ip, interface, gateway):
             count = data['routes'][route]['IPs'][ip].get('count', 10)
             ip_weight = data['routes'][route]['IPs'][ip].get('weight', 1)
-            logger.debug("Weight for IP {} is {}".format(ip, ip_weight))
+            logger.debug("Weight for IP %s is %s", ip, ip_weight)
             ip_score = get_ip_score(ip, loss_mult, lag_mult, count)
-            route_sum += ip_score*ip_weight
+            route_sum += ip_score * ip_weight
             weight_sum += ip_weight
             if del_routing_ip(ip, interface, gateway):
-                logger.error("Failed to remove routing for IP {} via {}\
- on interface {}".format(ip, gateway, interface))
+                logger.error("Failed to remove routing for IP %s via %s\
+ on interface %s", ip, gateway, interface)
         else:
             route_sum += 1000
-            logger.error("Failed to set routing for IP {} via {}\
- on interface {}".format(ip, gateway, interface))
-        logger.debug("Route sum is now {}".format(route_sum))
+            logger.error("Failed to set routing for IP %s via %s\
+ on interface %s", ip, gateway, interface)
+        logger.debug("Route sum is now %s", route_sum)
     if weight_sum == 0:
         weight_sum = 1
-    route_score = float(route_sum/weight_sum)
-    logger.debug("Route sum is {}, route score is {}"
-                 .format(route_sum, route_score))
+    route_score = float(route_sum / weight_sum)
+    logger.debug("Route sum is %s, route score is %s", route_sum, route_score)
     return route_score
 
 
@@ -85,15 +83,14 @@ def get_best_interfaces_for_routes(data, scores):
             if not best.get(route) or score < best_score.get(route):
                 best[route] = interface
                 best_score[route] = score
-                logger.debug("New best interface {} for route {} found. The \
-score is {}"
-                             .format(interface, route, score))
+                logger.debug("New best interface %s for route %s found. The \
+score is %s", interface, route, score)
     return best
 
 
 def get_current_routing_table():
     result = check_output(["ip", "route"])
-    logger.debug("Current routing table: {}".format(result))
+    logger.debug("Current routing table: %s", result)
     return result
 
 
@@ -102,50 +99,47 @@ def get_current_interfaces_for_routes(data):
     routing = {}
     table = get_current_routing_table().splitlines()
     for line in table:
-        # logger.debug("Line {}".format(line))
         match = re.match(r"(\S+)\s+via\s+(\S+)\s+dev\s+(\S+)", line)
         if match:
             route = match.group(1)
             iface = match.group(3)
             routing[route] = iface
-            logger.debug("Found route {} via iface {}".format(route, iface))
+            logger.debug("Found route %s via iface %s", route, iface)
             if route in routing and routing.get(route) != iface:
-                logger.error("Route {} found on iface {}, but already known".
-                             format(route, iface))
-    logger.debug("Routing is {}".format(routing))
+                logger.error("Route %s found on iface %s, but already known",
+                             route, iface)
+    logger.debug("Routing is %s", routing)
     return routing
 
 
 def compare_scores(scores, routing, best, data):
     for route in data.get('routes'):
-        logger.debug("Checking route {}".format(route))
+        logger.debug("Checking route %s", route)
         best_iface = best.get(route)
         curr_iface = routing.get(route)
         if best_iface != curr_iface:
-            logger.debug("Best iface {} is not current {}".format(best_iface,
-                         curr_iface))
+            logger.debug("Best iface %s is not current %s", best_iface,
+                         curr_iface)
             switch_cost = data.get(route).get("switch_cost", 100)
-            logger.debug("Switch cost for route {} is {}".format(route,
-                         switch_cost))
+            logger.debug("Switch cost for route %s is %s", route, switch_cost)
             curr_score = scores.get(curr_iface).get(route)
             best_score = scores.get(best_iface).get(route)
-            logger.debug("Current score {}, best score {}".format(curr_score,
-                         best_score))
+            logger.debug("Current score %s, best score %s", curr_score,
+                         best_score)
             if curr_score and best_score:
                 if best_score + switch_cost < curr_score:
-                    logger.info("Switching routing for {} to iface {}".format(
-                                route, best_iface))
+                    logger.info("Switching routing for %s to iface %s", route,
+                                best_iface)
                 else:
-                    logger.info("Iface {} score {} better than iface {} score\
-for route {} but switching cost is too high".format(best_iface, best_score,
-                                                    curr_iface, curr_score,
-                                                    route))
+                    logger.info("Iface %s score %s better than iface %s score\
+for route %s but switching cost is too high", best_iface, best_score,
+                                curr_iface, curr_score, route)
             else:
                 logger.warning("Cannot compare scores - current or best scores\
 is not available")
         else:
-            logger.debug("Best iface {} is the same as {}".format(best_iface,
-                         curr_iface))
+            logger.debug("Best iface %s is the same as %s", best_iface,
+                         curr_iface)
 
 
 def main():
@@ -162,19 +156,18 @@ def main():
         with open(args.config, "r") as config:
             data = yaml.load(config)
     except:
-        logger.error("Couldn't read config file {}".format(config))
+        logger.error("Couldn't read config file %s", config)
 
     scores = {}
     # get score for all routes on all interfaces
     for interface in data.get('interfaces'):
-        logger.debug("Testing interface {}".format(interface))
+        logger.debug("Testing interface %s", interface)
         scores[interface] = {}
         for route in data['interfaces'][interface].get('routes'):
-            logger.debug("Testing route {} on interface {}".format(route,
-                         interface))
+            logger.debug("Testing route %s on interface %s", route, interface)
             score = get_route_score(route, interface, data)
-            logger.info("Route {} got score {} on interface {}"
-                        .format(route, score, interface))
+            logger.info("Route %s got score %s on interface %s", route, score,
+                        interface)
             scores[interface][route] = score
 
     # get_current_interfaces_for_routes()
@@ -196,15 +189,15 @@ def parse_arguments():
         description='abcc - Automatic Best Connection Chooser')
 
     parser.add_argument(
-        '--dry-run', required=False,
-        default=False,
+        '-d', '--dry-run', required=False,
+        default=False, action='store_true',
         help="Just print data, don't change anything")
     parser.add_argument(
-        '--verbose', required=False,
-        default=False,
+        '-v', '--verbose', required=False,
+        default=False, action='store_true',
         help="Provide verbose output")
     parser.add_argument(
-        '--config', required=False,
+        '-c', '--config', required=False,
         default="example.yaml",
         help="Configuration file"
     )
