@@ -112,14 +112,38 @@ def get_current_interfaces_for_routes(data):
     return routing
 
 
+def change_routing(route, old_iface, old_gw, new_iface, new_gw):
+    changed = False
+    if route and old_iface and old_gw and new_iface and new_gw:
+        if args.dry-run:
+            logger.info("Not changing routing because dry run mode is enabled")
+        else:
+            if not del_routing_ip(route, old_iface, old_gw):
+                if not set_routing_ip(route, new_iface, new_gw):
+                    changed = True
+                    logger.debug("Routing for %s changed from iface %s to %s",
+                                 route, old_iface, new_iface)
+                else:
+                    logger.error("Old routing removed, but can't set new one")
+                    # TODO add recovery here
+            else:
+                logger.error("Couldn't remove route to %s on interface %s via\
+gateway %s", route, old_iface, old_gw)
+    else:
+        logger.error("Can't set routing - not enough data, some values are not\
+ defined. Route %s old iface %s old gateway %s new iface %s new gateway %s",
+                     route, old_iface, old_gw, new_iface, new_gw)
+    return changed
+
+
 def compare_scores(scores, routing, best, data):
     for route in data.get('routes'):
         logger.debug("Checking route %s", route)
         best_iface = best.get(route)
         curr_iface = routing.get(route)
         if best_iface != curr_iface:
-            logger.debug("Best iface %s is not current %s", best_iface,
-                         curr_iface)
+            logger.info("Best iface %s is not current %s", best_iface,
+                        curr_iface)
             switch_cost = data.get(route).get("switch_cost", 100)
             logger.debug("Switch cost for route %s is %s", route, switch_cost)
             curr_score = scores.get(curr_iface).get(route)
@@ -129,11 +153,17 @@ def compare_scores(scores, routing, best, data):
             if curr_score and best_score:
                 if best_score + switch_cost < curr_score:
                     logger.info("Switching routing for %s from intreface %s to\
- %s", route, curr_face, best_iface)
+ %s. Switching cost: %s", route, curr_face, best_iface, switch_cost)
+                    old_gw = data['interfaces'][curr_iface].get('gateway')
+                    new_gw = data['interfaces'][best_iface].get('gateway')
+                    if change_routing(route, curr_iface, old_gw, best_iface,
+                                      new_gw):
+                        logger.info("Routing changed sucessfully")
                 else:
                     logger.info("Iface %s score %s is better than iface %s\
- score for route %s but switching cost is too high", best_iface, best_score,
-                                curr_iface, curr_score, route)
+ score for route %s but switching cost (%s) is too high", best_iface,
+                                best_score, curr_iface, curr_score, route,
+                                switch_cost)
             else:
                 logger.warning("Cannot compare scores - current or best scores\
 is not available")
