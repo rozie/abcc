@@ -43,21 +43,24 @@ route
 
 For each route there are defined IPs, which will be tested (pinged). Each IP can
 have optional parameters:
-- multiplier, which increases importance of all results for that IP
+- multipliers, which increases importance of all results for that IP
 - count, which tells how many packets should be send to that IP
+- switch_cost, which prevents routing changes on small differences between interfaces
 
 Defaults
 ---------
-- lag_mult = 1
-- loss_mult = 10
+- lag multiplier = 1
+- loss multiplier = 10
 - count = 10
+- route change cost - 100
 
 Usage
 ---------
 - clone this repository
 - pip install -r requirements.txt
 - adjust config file (see example.yaml)
-- run with --dry-run True
+- run as root with --dry-run (-d) and change logs (root required for ICMP and
+  routing changes)
 
 Contribution
 ---------
