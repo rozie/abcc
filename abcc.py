@@ -94,7 +94,7 @@ def get_current_routing_table():
     return result
 
 
-def get_current_interfaces_for_routes(data):
+def get_current_interfaces_for_routes():
     # read_routing_table
     routing = {}
     table = get_current_routing_table().splitlines()
@@ -153,7 +153,7 @@ def compare_scores(scores, routing, best, data):
             if curr_score and best_score:
                 if best_score + switch_cost < curr_score:
                     logger.info("Switching routing for %s from intreface %s to\
- %s. Switching cost: %s", route, curr_face, best_iface, switch_cost)
+ %s. Switching cost: %s", route, curr_iface, best_iface, switch_cost)
                     old_gw = data['interfaces'][curr_iface].get('gateway')
                     new_gw = data['interfaces'][best_iface].get('gateway')
                     if change_routing(route, curr_iface, old_gw, best_iface,
@@ -161,7 +161,7 @@ def compare_scores(scores, routing, best, data):
                         logger.info("Routing changed sucessfully")
                 else:
                     logger.info("Iface %s score %s is better than iface %s\
- score for route %s but switching cost (%s) is too high", best_iface,
+ score %s for route %s but switching cost (%s) is too high", best_iface,
                                 best_score, curr_iface, curr_score, route,
                                 switch_cost)
             else:
@@ -201,7 +201,7 @@ def main():
             scores[interface][route] = score
 
     # get_current_interfaces_for_routes()
-    routing = get_current_interfaces_for_routes(data)
+    routing = get_current_interfaces_for_routes()
     logger.debug("Current routing: %s",  routing)
 
     # choose_best_interface_for_route()
