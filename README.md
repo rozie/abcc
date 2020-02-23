@@ -17,11 +17,20 @@ The abcc is fully customizable, interface and route aware, so only routes
 available on given interface will be set on that interface. User can set weights
 of parameters and IPs in the configuration file. Logs are send to syslog.
 
+You can find some motivation and history on my blog (PL). First post about
+this project: https://zakr.es/blog/2017/03/geneza-nazwa-i-zastosowania/
+
 Requirements
 ---------
 - GNU/Linux
-- Pytnon 2.7
+- Python 2.7 (because of ping module)
 - modules listed in requirements.txt
+
+Installation
+- virtualenv venv_abcc
+- source ./venv_abcc/bin/activate
+- pip install -r requirements.txt
+- adjust config file
 
 Configuration
 ---------

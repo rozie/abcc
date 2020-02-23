@@ -185,8 +185,8 @@ def main():
     try:
         with open(args.config, "r") as config:
             data = yaml.load(config)
-    except:
-        logger.error("Couldn't read config file %s", config)
+    except Exception as e:
+        logger.error("Couldn't read config file %s", e)
 
     scores = {}
     # get score for all routes on all interfaces
