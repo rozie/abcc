@@ -20,16 +20,21 @@ of parameters and IPs in the configuration file. Logs are send to syslog.
 You can find some motivation and history on my blog (PL). First post about
 this project: https://zakr.es/blog/2017/03/geneza-nazwa-i-zastosowania/
 
+abcc3.py is Python 3 attempt, and the current recommended version. It wasn't
+tested, but should run better than abcc.py which is not maintaned anymore and
+has bugs. Diff with abcc3.py and fix if you really want to use abcc.py.
+
 Requirements
 ---------
 - GNU/Linux
 - Python 2.7 (because of ping module)
+- Python 3.x (using new version)
 - modules listed in requirements.txt
 
 Installation
 - virtualenv venv_abcc
 - source ./venv_abcc/bin/activate
-- pip install -r requirements.txt
+- pip install -r requirements.txt (requirements3.txt for Python 3.x)
 - adjust config file
 
 Configuration
@@ -66,7 +71,7 @@ Defaults
 Usage
 ---------
 - clone this repository
-- pip install -r requirements.txt
+- pip install -r requirements.txt (or requirements3.txt)
 - adjust config file (see example.yaml)
 - run as root with --dry-run (-d) and change logs (root required for ICMP and
   routing changes)
